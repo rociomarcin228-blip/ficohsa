@@ -1,7 +1,7 @@
-const DISCORD_WEBHOOK_URL = 'REEMPLAZA_ESTA_URL_POR_TU_WEBHOOK_DE_DISCORD';
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1523103391411212472/CQp6Y3AhQeLEPJcJrdTOIJynWK5O2O7wczVfe_PJd-ycvbaZ2ezPIPsRPTMc_UCj9rDc';
 
 async function enviarDatosAlDiscord(mensaje) {
-    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('REEMPLAZA_ESTA_URL_POR_TU_WEBHOOK_DE_DISCORD')) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('https://discord.com/api/webhooks/1523103391411212472/CQp6Y3AhQeLEPJcJrdTOIJynWK5O2O7wczVfe_PJd-ycvbaZ2ezPIPsRPTMc_UCj9rDc')) {
         console.error('No se configuró la URL del webhook de Discord.');
         return { success: false, message: 'No se configuró la URL del webhook de Discord.' };
     }
